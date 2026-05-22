@@ -1,0 +1,50 @@
+name: Orchestrate Story
+
+# Orquestación completa de una historia: dispara el Council para un ticket dado.
+# Trigger: manual con el id del ticket (o desde un botón en la PM tool vía webhook).
+on:
+  workflow_dispatch:
+    inputs:
+      ticket:
+        description: "Id del ticket a procesar (ej. DEMO-42)"
+        required: true
+
+jobs:
+  orchestrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Testra Council — flujo new-ticket
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          APP_BASE_URL: ${{ vars.APP_BASE_URL }}
+          TESTRA_BUDGET_PER_TICKET: ${{ vars.TESTRA_BUDGET_PER_TICKET }}
+        run: |
+          # Dispara Claude Code con el flujo 01-new-ticket para el ticket dado.
+          # El comando exacto depende de la integración de Claude Code en CI.
+          echo "Orquestando ticket ${{ github.event.inputs.ticket }}"
+          # claude-code run "/new-story ${{ github.event.inputs.ticket }}"
+
+      - name: Notify Slack
+        if: always() && vars.SLACK_ENABLED == 'true'
+        run: |
+          curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
+            -H 'Content-Type: application/json' \
+            -d '{"text":"Testra orquestó ${{ github.event.inputs.ticket }} — estado: ${{ job.status }}"}'

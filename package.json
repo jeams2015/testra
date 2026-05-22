@@ -1,0 +1,29 @@
+{
+  "name": "testra",
+  "version": "0.1.0",
+  "description": "El framework del nuevo QA — orquestación de testing con IA (metodología QIA)",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:features": "playwright test tests/features/",
+    "typecheck": "tsc --noEmit",
+    "report": "playwright show-report"
+  },
+  "keywords": [
+    "qa",
+    "testing",
+    "ai",
+    "playwright",
+    "test-automation",
+    "qia",
+    "testra"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@playwright/test": "^1.51.0",
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.4.7",
+    "typescript": "^5.8.2"
+  }
+}

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "TC-DISC-01",
+    "description": "BIENVENIDO10 aplica 10% sin mínimo — subtotal $200",
+    "subtotalUsd": 200,
+    "discountCode": "BIENVENIDO10",
+    "expectedOutcome": "applied",
+    "expectedMessage": "Código BIENVENIDO10 aplicado.",
+    "expectedDiscountUsd": 24.00,
+    "rule": "RULE-DISC-01"
+  },
+  {
+    "id": "TC-DISC-02",
+    "description": "VERANO25 rechazado por subtotal $90 < $100",
+    "subtotalUsd": 90,
+    "discountCode": "VERANO25",
+    "expectedOutcome": "rejected",
+    "expectedMessage": "Este código requiere un subtotal mínimo de $100.00.",
+    "rule": "RULE-DISC-01"
+  },
+  {
+    "id": "TC-DISC-03",
+    "description": "VERANO25 aplica 25% con subtotal $240 >= $100",
+    "subtotalUsd": 240,
+    "discountCode": "VERANO25",
+    "expectedOutcome": "applied",
+    "expectedMessage": "Código VERANO25 aplicado.",
+    "expectedDiscountUsd": 60.00,
+    "rule": "RULE-DISC-01"
+  },
+  {
+    "id": "TC-DISC-04",
+    "description": "ENVIOGRATIS aplica envío gratis",
+    "subtotalUsd": 90,
+    "discountCode": "ENVIOGRATIS",
+    "expectedOutcome": "applied",
+    "expectedMessage": "Código ENVIOGRATIS aplicado.",
+    "expectedDiscountUsd": 0,
+    "rule": "RULE-DISC-01 + RULE-SHIP-01"
+  },
+  {
+    "id": "TC-DISC-05",
+    "description": "código inexistente es rechazado",
+    "subtotalUsd": 100,
+    "discountCode": "XYZINVALIDO",
+    "expectedOutcome": "rejected",
+    "expectedMessage": "El código no existe.",
+    "rule": "RULE-DISC-01"
+  }
+]

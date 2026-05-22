@@ -1,0 +1,44 @@
+[
+  {
+    "id": "TC-FLOW-01",
+    "description": "flujo completo — P-005 sin descuento, total $283.20",
+    "productId": "P-005",
+    "quantity": 1,
+    "discountCode": null,
+    "credentials": {
+      "email": "demo@nimbo.store",
+      "password": "nimbo123"
+    },
+    "checkout": {
+      "fullName": "James Cueva",
+      "email": "demo@nimbo.store",
+      "address": "Av. Javier Prado 1234",
+      "city": "Lima",
+      "cardNumber": "4111111111111111",
+      "expiry": "12/26",
+      "cvv": "123"
+    },
+    "expectedTotal": 283.20
+  },
+  {
+    "id": "TC-FLOW-02",
+    "description": "flujo completo — P-001 + BIENVENIDO10, total $103.47",
+    "productId": "P-001",
+    "quantity": 1,
+    "discountCode": "BIENVENIDO10",
+    "credentials": {
+      "email": "demo@nimbo.store",
+      "password": "nimbo123"
+    },
+    "checkout": {
+      "fullName": "James Cueva",
+      "email": "demo@nimbo.store",
+      "address": "Av. Javier Prado 1234",
+      "city": "Lima",
+      "cardNumber": "4111111111111111",
+      "expiry": "12/26",
+      "cvv": "123"
+    },
+    "expectedTotal": 103.47
+  }
+]

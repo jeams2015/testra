@@ -1,0 +1,42 @@
+[
+  {
+    "id": "TC-AUTH-01",
+    "description": "login exitoso con credencial de demo válida",
+    "email": "demo@nimbo.store",
+    "password": "nimbo123",
+    "expectedOutcome": "success",
+    "expectedRedirect": "/checkout"
+  },
+  {
+    "id": "TC-AUTH-02",
+    "description": "login rechazado con contraseña incorrecta",
+    "email": "demo@nimbo.store",
+    "password": "wrongpass",
+    "expectedOutcome": "error",
+    "expectedMessage": "Correo o contraseña incorrectos."
+  },
+  {
+    "id": "TC-AUTH-03",
+    "description": "login rechazado con email no registrado",
+    "email": "noexiste@nimbo.store",
+    "password": "nimbo123",
+    "expectedOutcome": "error",
+    "expectedMessage": "Correo o contraseña incorrectos."
+  },
+  {
+    "id": "TC-AUTH-04",
+    "description": "validación de formato — email inválido sin @",
+    "email": "emailsinArroba",
+    "password": "nimbo123",
+    "expectedOutcome": "error",
+    "expectedMessage": "Ingresa un correo válido."
+  },
+  {
+    "id": "TC-AUTH-05",
+    "description": "validación — contraseña menor a 6 caracteres",
+    "email": "demo@nimbo.store",
+    "password": "abc",
+    "expectedOutcome": "error",
+    "expectedMessage": "La contraseña debe tener al menos 6 caracteres."
+  }
+]
