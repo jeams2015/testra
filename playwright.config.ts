@@ -1,5 +1,5 @@
 /**
- * QIA — Playwright Configuration
+ * Testra — Playwright Configuration
  *
  * Configuración central para todos los tests de Nimbo Store.
  * Lee la URL base desde APP_BASE_URL en el .env.
@@ -25,6 +25,13 @@ try {
   // .env no existe en CI — es esperado
 }
 
+// Si APP_BASE_URL apunta a una URL externa (staging/prod), Playwright no levanta
+// la demo-app — se asume que ya está deployed. Si apunta a localhost o no está
+// definida, levantamos la demo-app local.
+const appBaseUrl = process.env.APP_BASE_URL;
+const isExternalUrl =
+  !!appBaseUrl && !/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(appBaseUrl);
+
 export default defineConfig({
   testDir: './tests',
 
@@ -45,9 +52,8 @@ export default defineConfig({
   ],
 
   use: {
-    // La app corre en localhost durante el desarrollo.
-    // En CI apunta a staging via APP_BASE_URL.
-    baseURL: process.env.APP_BASE_URL ?? 'http://localhost:5173',
+    // En local: localhost. En CI con app deployed: APP_BASE_URL apunta a staging.
+    baseURL: appBaseUrl ?? 'http://localhost:5173',
 
     // Capturas y video solo en fallos — reduce ruido.
     screenshot: 'only-on-failure',
@@ -62,8 +68,9 @@ export default defineConfig({
     },
   ],
 
-  // Levanta la demo-app automáticamente si no hay APP_BASE_URL externo.
-  webServer: process.env.APP_BASE_URL
+  // Levanta la demo-app cuando los tests apuntan a localhost. Si la URL es
+  // externa, no la levantamos (la app ya está deployed allá).
+  webServer: isExternalUrl
     ? undefined
     : {
         command: 'npm run dev',
