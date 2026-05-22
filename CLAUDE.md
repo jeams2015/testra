@@ -94,6 +94,8 @@ Estas reglas se aplican en CADA historia, sin excepción.
 | `/retest <TICKET>` | Retest de bugs resueltos | Ejecuta → Healer si necesario → cierra bugs |
 | `/heal <TEST>` | Test fallido | Diagnóstico + reparación con el Healer |
 | `/coverage` | On-demand | Mapa de cobertura + gaps |
+| `/regression` | Post-deploy / release | Suite completa: Tier 1 (critical) + Tier 2 + Tier 3 |
+| `/regression-critical` | Pre-deploy rápido | Solo Tier 1 — critical path, fail-fast |
 
 > Los comandos se definen en `.claude/commands/`. Los flujos en `.claude/flows/`.
 

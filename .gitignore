@@ -32,3 +32,4 @@ npm-debug.log*
 # Testra runtime
 .testra/cache/
 .testra/contracts/*.json
+demo-app/vite.config.ts.timestamp-*

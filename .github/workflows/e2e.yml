@@ -14,6 +14,7 @@ on:
       - "tests/**"
       - "adapters/**"
       - "core/**"
+      - "demo-app/src/**"
 
 jobs:
   e2e:
@@ -22,13 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci
+
+      - name: Install demo-app dependencies
+        run: npm ci --prefix demo-app
 
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
@@ -36,10 +41,10 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Run tests
+      - name: Run E2E tests
         env:
+          CI: "true"
           APP_BASE_URL: ${{ vars.APP_BASE_URL }}
-          APP_ENV: ${{ vars.APP_ENV }}
         run: |
           if [ -n "${{ github.event.inputs.spec }}" ]; then
             npx playwright test "${{ github.event.inputs.spec }}"
@@ -47,10 +52,10 @@ jobs:
             npx playwright test tests/features/
           fi
 
-      - name: Upload report
+      - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-${{ github.run_id }}
           path: playwright-report/
           retention-days: 7

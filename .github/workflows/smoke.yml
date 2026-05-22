@@ -1,9 +1,10 @@
-name: Smoke
+name: Smoke Tests
 
-# Health check diario — corre los tests marcados como smoke / critical.
+# Health check diario — verifica que la app sigue funcionando.
+# Corre los tests de auth (siempre smoke) y pricing (aritmética crítica).
 on:
   schedule:
-    - cron: "0 12 * * *"   # 12:00 UTC diario
+    - cron: "0 12 * * *"   # 12:00 UTC diario (7am Lima)
   workflow_dispatch:
 
 jobs:
@@ -13,34 +14,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci
+
+      - name: Install demo-app dependencies
+        run: npm ci --prefix demo-app
 
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
-      - name: Run smoke tests
+      - name: Run smoke tests (auth + pricing)
         env:
+          CI: "true"
           APP_BASE_URL: ${{ vars.APP_BASE_URL }}
-          APP_ENV: ${{ vars.APP_ENV }}
-        run: npx playwright test --grep "@smoke"
+        run: |
+          npx playwright test \
+            tests/features/01-auth/ \
+            tests/features/03-pricing/ \
+            --reporter=list
 
       - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smoke-report
+          name: smoke-report-${{ github.run_id }}
           path: playwright-report/
-          retention-days: 7
+          retention-days: 3
 
       - name: Notify Slack on failure
         if: failure() && vars.SLACK_ENABLED == 'true'
         run: |
           curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
             -H 'Content-Type: application/json' \
-            -d '{"text":"⚠️ Testra smoke FALLÓ — revisar la plataforma"}'
+            -d '{"text":"⚠️ Testra smoke FALLÓ en ${{ github.repository }} — revisar la plataforma: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'

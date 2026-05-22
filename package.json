@@ -7,8 +7,13 @@
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:features": "playwright test tests/features/",
+    "test:auth": "playwright test tests/features/01-auth/",
+    "test:cart": "playwright test tests/features/02-cart/",
+    "test:pricing": "playwright test tests/features/03-pricing/",
+    "test:e2e": "playwright test tests/features/04-full-flow/",
     "typecheck": "tsc --noEmit",
-    "report": "playwright show-report"
+    "report": "playwright show-report",
+    "jira": "node --loader ts-node/esm adapters/pm-tools/jira/src/cli.ts"
   },
   "keywords": [
     "qa",

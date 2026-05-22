@@ -1,13 +1,19 @@
 name: Orchestrate Story
 
-# Orquestación completa de una historia: dispara el Council para un ticket dado.
-# Trigger: manual con el id del ticket (o desde un botón en la PM tool vía webhook).
+# Pipeline completo de Testra para un ticket: Reporter → Analyst → Sentinel →
+# Releaser → Planner → Automator → Sentinel → Ejecutar → Healer → Keeper → Releaser → Reporter
+#
+# Trigger: manual con el id del ticket, o desde webhook de Jira.
 on:
   workflow_dispatch:
     inputs:
       ticket:
         description: "Id del ticket a procesar (ej. DEMO-42)"
         required: true
+      dry_run:
+        description: "Dry run — solo genera el contrato, no crea rama ni PR"
+        required: false
+        default: "false"
 
 jobs:
   orchestrate:
@@ -15,36 +21,64 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
 
-      - name: Setup Node
+      - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm ci
+
+      - name: Install demo-app dependencies
+        run: npm ci --prefix demo-app
 
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
-      - name: Run Testra Council — flujo new-ticket
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
-          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-          APP_BASE_URL: ${{ vars.APP_BASE_URL }}
-          TESTRA_BUDGET_PER_TICKET: ${{ vars.TESTRA_BUDGET_PER_TICKET }}
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Configure git for Releaser
         run: |
-          # Dispara Claude Code con el flujo 01-new-ticket para el ticket dado.
-          # El comando exacto depende de la integración de Claude Code en CI.
-          echo "Orquestando ticket ${{ github.event.inputs.ticket }}"
-          # claude-code run "/new-story ${{ github.event.inputs.ticket }}"
+          git config user.email "testra-bot@users.noreply.github.com"
+          git config user.name "Testra Bot"
+
+      - name: Run Testra Council — /new-story
+        env:
+          ANTHROPIC_API_KEY:        ${{ secrets.ANTHROPIC_API_KEY }}
+          JIRA_BASE_URL:            ${{ vars.JIRA_BASE_URL }}
+          JIRA_EMAIL:               ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN:           ${{ secrets.JIRA_API_TOKEN }}
+          GH_TOKEN:                 ${{ secrets.GH_PAT }}
+          APP_BASE_URL:             ${{ vars.APP_BASE_URL }}
+          TESTRA_BUDGET_PER_TICKET: ${{ vars.TESTRA_BUDGET_PER_TICKET || '0.75' }}
+          CI:                       "true"
+        run: |
+          TICKET="${{ github.event.inputs.ticket }}"
+          DRY="${{ github.event.inputs.dry_run }}"
+          echo "▶ Testra orquestando ticket: $TICKET (dry_run=$DRY)"
+          claude --print "/new-story $TICKET"
+
+      - name: Upload artifacts (tests generados + reporte)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testra-output-${{ github.event.inputs.ticket }}-${{ github.run_id }}
+          path: |
+            playwright-report/
+            tests/features/
+          retention-days: 14
 
       - name: Notify Slack
         if: always() && vars.SLACK_ENABLED == 'true'
         run: |
+          STATUS="${{ job.status }}"
+          EMOJI=$([ "$STATUS" = "success" ] && echo "✅" || echo "❌")
           curl -X POST "${{ secrets.SLACK_WEBHOOK_URL }}" \
             -H 'Content-Type: application/json' \
-            -d '{"text":"Testra orquestó ${{ github.event.inputs.ticket }} — estado: ${{ job.status }}"}'
+            -d "{\"text\":\"$EMOJI Testra orquestó ${{ github.event.inputs.ticket }} — $STATUS: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
